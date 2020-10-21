@@ -19,8 +19,8 @@ tf.random.set_seed(1618)
 #tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-CONTENT_IMG_PATH = ""           #TODO: Add this.
-STYLE_IMG_PATH = ""             #TODO: Add this.
+CONTENT_IMG_PATH = "img/content.jpg"           #DONE: Add Content Path.
+STYLE_IMG_PATH = "img/style.jpg"             #DONE: Add Style Path.
 
 
 CONTENT_IMG_H = 500
@@ -39,7 +39,7 @@ TRANSFER_ROUNDS = 3
 
 #=============================<Helper Fuctions>=================================
 '''
-TODO: implement this.
+TODO: implement deprocessImage.
 This function should take the tensor and re-convert it to an image.
 '''
 def deprocessImage(img):
@@ -56,7 +56,7 @@ def gramMatrix(x):
 #========================<Loss Function Builder Functions>======================
 
 def styleLoss(style, gen):
-    return None   #TODO: implement.
+    return K.sum(K.square(gramMatrix(style) - gramMatrix(gen)) / (4. * (numFilter ** 2) * (STYLE_IMG_H * STYLE_IMG_W) ** 2))   #FIXME: implement styleLoss, change numFilter to correct variable.
 
 
 def contentLoss(content, gen):
@@ -64,7 +64,7 @@ def contentLoss(content, gen):
 
 
 def totalLoss(x):
-    return None   #TODO: implement.
+    return None   #TODO: implement totalLoss.
 
 
 
