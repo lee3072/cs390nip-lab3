@@ -13,10 +13,10 @@ import warnings
 
 random.seed(1618)
 np.random.seed(1618)
-#tf.set_random_seed(1618)   # Uncomment for TF1.
-tf.random.set_seed(1618)
+tf.set_random_seed(1618)   # Uncomment for TF1.
+# tf.random.set_seed(1618)
 
-#tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
+tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 CONTENT_IMG_PATH = "img/content.jpg"           #DONE: Add Content Path.
@@ -29,13 +29,13 @@ CONTENT_IMG_W = 500
 STYLE_IMG_H = 500
 STYLE_IMG_W = 500
 
-CONTENT_WEIGHT = 0.1    # Alpha weight.
-STYLE_WEIGHT = 1.0      # Beta weight.
-TOTAL_WEIGHT = 1.0
+CONTENT_WEIGHT = 1e-6    # Alpha weight.
+STYLE_WEIGHT = 3.5e-5      # Beta weight.
+TOTAL_WEIGHT = 2.5e-8
 
-TRANSFER_ROUNDS = 3
+TRANSFER_ROUNDS = 120
 
-numFilter = 3
+numFilter = 7
 
 #=============================<Helper Fuctions>=================================
 '''
@@ -142,22 +142,40 @@ def styleTransfer(cData, sData, tData):
     # DONE: Setup gradients or use K.gradients().
     grads = K.gradients(loss, genTensor)    # Reference: https://stackoverflow.com/questions/49834380/k-gradientsloss-input-img0-return-none-keras-cnn-visualization-with-ten
     outputs = [loss]
-    outputs.append(grads)
-    kFunction = K.function([genTensor], outputs)
+    outputs += grads
 
+    #=========================<Evaluator>===========================================
+    # Reference: https://notebook.community/aidiary/notebooks/keras/170818-neural-style-transfer-examples
+    def eval_loss_and_grads(x):
+        x = x.reshape((1,CONTENT_IMG_H,CONTENT_IMG_W,3))
+        outs = K.function([genTensor], outputs)([x])
+        loss = outs[0]
+        grad = outs[1].flatten().astype('float64')
+        return loss, grad 
+
+    class Evaluator:
+        
+        def loss(self, x):
+            loss, grad = eval_loss_and_grads(x)
+            self._grad = grad
+            return loss
+        
+        def gradients(self, x):
+            return self._grad
+
+    evaluator = Evaluator()
+    x = np.random.uniform(0, 255, (1, CONTENT_IMG_H, CONTENT_IMG_W, 3)) - 128.0 # Reference: https://neurowhai.tistory.com/169 
     print("   Beginning transfer.")
     for i in range(TRANSFER_ROUNDS):
         print("   Step %d." % i)
         #FIXME: perform gradient descent using fmin_l_bfgs_b. Reference: https://notebook.community/aidiary/notebooks/keras/170818-neural-style-transfer-examples
-        x, tLoss, info_dic =  scipy.optimize.fmin_l_bfgs_b(kFunction([x])[0], cData.flatten(), fprime=kFunction([x])[1].flatten().astype("float64"), maxfun=20)
+        x, tLoss, info_dic =  fmin_l_bfgs_b(evaluator.loss, x.flatten(), fprime=evaluator.gradients, maxfun=20)
         print("      Loss: %f." % tLoss)
-        img = deprocessImage(x)
-        saveFile = "img/output.jpg"   #DONE: set saveFile path.
-        #imsave(saveFile, img)   #Uncomment when everything is working right.
-        print("      Image saved to \"%s\"." % saveFile)
+    img = deprocessImage(x)
+    saveFile = "img/output_final.jpg"   #DONE: set saveFile path.
+    imsave(saveFile, img)   #Uncomment when everything is working right.
+    print("      Image saved to \"%s\"." % saveFile)
     print("   Transfer complete.")
-
-
 
 
 
