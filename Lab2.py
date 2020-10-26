@@ -104,7 +104,7 @@ def preprocessData(raw):
 
 
 '''
-TODO: Allot of stuff needs to be implemented in this function.
+DONE: Allot of stuff needs to be implemented in this function.
 First, make sure the model is set up properly.
 Then construct the loss function (from content and style loss).
 Gradient functions will also need to be created, or you can use K.Gradients().
@@ -168,7 +168,7 @@ def styleTransfer(cData, sData, tData):
     print("   Beginning transfer.")
     for i in range(TRANSFER_ROUNDS):
         print("   Step %d." % i)
-        #FIXME: perform gradient descent using fmin_l_bfgs_b. Reference: https://notebook.community/aidiary/notebooks/keras/170818-neural-style-transfer-examples
+        #DONE: perform gradient descent using fmin_l_bfgs_b. Reference: https://notebook.community/aidiary/notebooks/keras/170818-neural-style-transfer-examples
         x, tLoss, info_dic =  fmin_l_bfgs_b(evaluator.loss, x.flatten(), fprime=evaluator.gradients, maxfun=20)
         print("      Loss: %f." % tLoss)
     img = deprocessImage(x)
